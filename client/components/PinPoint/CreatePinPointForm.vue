@@ -1,14 +1,13 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { fetchy } from "../../utils/fetchy";
-import { ObjectId } from "mongodb";
 
 const pin = ref("");
 const image = ref("");
 const caption = ref("");
 const emit = defineEmits(["refreshPinPoints"]);
 
-const createPinPoint = async (pin: ObjectId, image: string, caption?: string) => {
+const createPinPoint = async (pin: string, image: string, caption?: string) => {
   console.log("pin", pin);
   console.log("image", image);
   console.log("caption", caption);
