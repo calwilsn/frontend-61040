@@ -14,7 +14,7 @@ const createPinPoint = async (pin: ObjectId, image: string, caption?: string) =>
   console.log("caption", caption);
   try {
     await fetchy("/api/pinpoints", "POST", {
-      body: { pin, image, caption },
+      body: { pin: pin, image: image, caption: caption },
     });
   } catch (_) {
     console.log("error occurred");
