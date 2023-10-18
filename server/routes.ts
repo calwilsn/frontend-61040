@@ -160,7 +160,7 @@ class Routes {
   /**
    * Creates a new PinPoint with given content and caption
    */
-  @Router.post("/pinpoints")
+  @Router.post("/pinpoints/:pin/:image/:caption")
   async createPinPoint(session: WebSessionDoc, pin: ObjectId, image: string, caption?: string) {
     console.log("pin", pin);
     console.log("image", image);
