@@ -1,49 +1,60 @@
-import { ObjectId } from "mongodb";
+import { Filter, ObjectId } from "mongodb";
 
 import { Router, getExpressRouter } from "./framework/router";
 
-import { Friend, Post, User, WebSession } from "./app";
-import { PostDoc, PostOptions } from "./concepts/post";
+import { Collection, Location, Map, Pin, PinPoint, Post, User, WebSession } from "./app";
+import { PinPointDoc } from "./concepts/pinpoint";
+import { PostAuthorNotMatchError, PostDoc } from "./concepts/post";
 import { UserDoc } from "./concepts/user";
 import { WebSessionDoc } from "./concepts/websession";
-import Responses from "./responses";
 
 class Routes {
+  /**
+   * Find the current user associated with the session
+   **/
   @Router.get("/session")
   async getSessionUser(session: WebSessionDoc) {
     const user = WebSession.getUser(session);
-    return await User.getUserById(user);
+    return await User.getById(user);
   }
 
+  /**
+   * Returns all users
+   **/
   @Router.get("/users")
   async getUsers() {
     return await User.getUsers();
   }
 
+  /**
+   * Finds exactly one user with given username
+   */
   @Router.get("/users/:username")
   async getUser(username: string) {
-    return await User.getUserByUsername(username);
+    return (await User.getUsers(username))[0];
   }
 
+  /**
+   * Creates a new user with given username
+   */
   @Router.post("/users")
   async createUser(session: WebSessionDoc, username: string, password: string) {
     WebSession.isLoggedOut(session);
     return await User.create(username, password);
   }
 
+  /**
+   * Applies filter to update user currently logged in
+   */
   @Router.patch("/users")
   async updateUser(session: WebSessionDoc, update: Partial<UserDoc>) {
     const user = WebSession.getUser(session);
     return await User.update(user, update);
   }
 
-  @Router.delete("/users")
-  async deleteUser(session: WebSessionDoc) {
-    const user = WebSession.getUser(session);
-    WebSession.end(session);
-    return await User.delete(user);
-  }
-
+  /**
+   * Logs in user with given username and password
+   */
   @Router.post("/login")
   async logIn(session: WebSessionDoc, username: string, password: string) {
     const u = await User.authenticate(username, password);
@@ -51,6 +62,9 @@ class Routes {
     return { msg: "Logged in!" };
   }
 
+  /**
+   * Logs out currently active user
+   */
   @Router.post("/logout")
   async logOut(session: WebSessionDoc) {
     WebSession.end(session);
@@ -58,83 +72,170 @@ class Routes {
   }
 
   @Router.get("/posts")
-  async getPosts(author?: string) {
-    let posts;
-    if (author) {
-      const id = (await User.getUserByUsername(author))._id;
-      posts = await Post.getByAuthor(id);
-    } else {
-      posts = await Post.getPosts({});
-    }
-    return Responses.posts(posts);
+  async getPosts(query: Filter<PostDoc>) {
+    return await Post.read(query);
   }
 
   @Router.post("/posts")
-  async createPost(session: WebSessionDoc, content: string, options?: PostOptions) {
+  async createPost(session: WebSessionDoc, content: string) {
     const user = WebSession.getUser(session);
-    const created = await Post.create(user, content, options);
-    return { msg: created.msg, post: await Responses.post(created.post) };
-  }
-
-  @Router.patch("/posts/:_id")
-  async updatePost(session: WebSessionDoc, _id: ObjectId, update: Partial<PostDoc>) {
-    const user = WebSession.getUser(session);
-    await Post.isAuthor(user, _id);
-    return await Post.update(_id, update);
+    return await Post.create(user, content);
   }
 
   @Router.delete("/posts/:_id")
   async deletePost(session: WebSessionDoc, _id: ObjectId) {
-    const user = WebSession.getUser(session);
-    await Post.isAuthor(user, _id);
-    return Post.delete(_id);
+    // Make sure the user deleting is the author of the post
+    const sessionUser = WebSession.getUser(session);
+    const post = await Post.posts.readOne({ _id });
+
+    if (post === null) {
+      throw new Error("post not found");
+    }
+
+    const postUser = post.author;
+
+    if (postUser !== sessionUser) {
+      throw new PostAuthorNotMatchError(postUser, sessionUser);
+    }
+
+    return await Post.delete(_id);
   }
 
-  @Router.get("/friends")
-  async getFriends(session: WebSessionDoc) {
-    const user = WebSession.getUser(session);
-    return await User.idsToUsernames(await Friend.getFriends(user));
+  /**
+   * Creates new map
+   */
+  @Router.post("/map")
+  async createMap(locations?: Array<ObjectId>, pins?: Array<ObjectId>, currLocation?: ObjectId) {
+    return await Map.createMap(locations, pins, currLocation);
   }
 
-  @Router.delete("/friends/:friend")
-  async removeFriend(session: WebSessionDoc, friend: string) {
-    const user = WebSession.getUser(session);
-    const friendId = (await User.getUserByUsername(friend))._id;
-    return await Friend.removeFriend(user, friendId);
+  /**
+   * Select or deselect coordinates on the map and create a new location there if
+   * it does not already exist
+   */
+  @Router.patch("/map/:mapid/:x/:y")
+  async selectLocation(session: WebSessionDoc, mapid: ObjectId, x: number, y: number) {
+    const location = (await Location.createLocation(x, y)).location;
+    return await Map.selectLocation(mapid, location._id);
   }
 
-  @Router.get("/friend/requests")
-  async getRequests(session: WebSessionDoc) {
+  /**
+   * Create new pin at current location and add to map
+   */
+  @Router.patch("/map/pin/:mapid")
+  async dropPin(session: WebSessionDoc, mapid: ObjectId) {
     const user = WebSession.getUser(session);
-    return await Responses.friendRequests(await Friend.getRequests(user));
+    const currLocation = (await Map.getCurrLocation(mapid)).currLocation;
+    if (currLocation === undefined) {
+      return { msg: "Cannot drop Pin at undefined location" };
+    }
+    const pin = (await Pin.dropPin(user, currLocation)).pin;
+    return await Map.addPin(mapid, pin._id);
   }
 
-  @Router.post("/friend/requests/:to")
-  async sendFriendRequest(session: WebSessionDoc, to: string) {
+  /**
+   * Remove pin from map
+   */
+  @Router.delete("/map/pin/:mapid/:pinid")
+  async removePin(session: WebSessionDoc, mapid: ObjectId, pinid: ObjectId) {
     const user = WebSession.getUser(session);
-    const toId = (await User.getUserByUsername(to))._id;
-    return await Friend.sendRequest(user, toId);
+    await Map.removePin(mapid, pinid);
+    return await Pin.sanitizePin(pinid, user);
   }
 
-  @Router.delete("/friend/requests/:to")
-  async removeFriendRequest(session: WebSessionDoc, to: string) {
-    const user = WebSession.getUser(session);
-    const toId = (await User.getUserByUsername(to))._id;
-    return await Friend.removeRequest(user, toId);
+  @Router.get("/pinpoints")
+  async getPinPoints(query: Filter<PinPointDoc>) {
+    return await PinPoint.read(query);
   }
 
-  @Router.put("/friend/accept/:from")
-  async acceptFriendRequest(session: WebSessionDoc, from: string) {
+  /**
+   * Read pinpoints for currentuser
+   */
+  @Router.get("/pinpoints/user")
+  async getPinPointsByUser(session: WebSessionDoc) {
     const user = WebSession.getUser(session);
-    const fromId = (await User.getUserByUsername(from))._id;
-    return await Friend.acceptRequest(fromId, user);
+    return await PinPoint.read({ user });
   }
 
-  @Router.put("/friend/reject/:from")
-  async rejectFriendRequest(session: WebSessionDoc, from: string) {
+  /**
+   * Creates a new PinPoint with given content and caption
+   */
+  @Router.post("/pinpoints")
+  async createPinPoint(session: WebSessionDoc, pin: ObjectId, image: string, caption?: string) {
+    console.log("pin", pin);
+    console.log("image", image);
+    console.log("caption", caption);
     const user = WebSession.getUser(session);
-    const fromId = (await User.getUserByUsername(from))._id;
-    return await Friend.rejectRequest(fromId, user);
+    return await PinPoint.makePost(pin, image, caption, user);
+  }
+
+  /**
+   * Edits the caption of an existing pinpoint
+   */
+  @Router.patch("/pinpoints/edit/:pinpointid/:caption")
+  async editCaption(session: WebSessionDoc, pinpointid: ObjectId, caption: string) {
+    const user = WebSession.getUser(session);
+    return await PinPoint.editCaption(pinpointid, caption, user);
+  }
+
+  /**
+   * Delete a pinpoint
+   */
+  @Router.delete("/pinpoints/user/:_id")
+  async deletePinPoint(session: WebSessionDoc, _id: ObjectId) {
+    const user = WebSession.getUser(session);
+    return await PinPoint.deletePost(_id, user);
+  }
+
+  /**
+   * Get all collections accessible by user
+   */
+  @Router.get("/collection")
+  async getAllCollections(session: WebSessionDoc) {
+    const user = WebSession.getUser(session);
+    return await Collection.read({ users: user });
+  }
+
+  /**
+   * Search for a collection by name
+   */
+  @Router.get("/collection/:name")
+  async getCollection(session: WebSessionDoc, name: string) {
+    const user = WebSession.getUser(session);
+    return await Collection.getCollectionByName(name, user);
+  }
+
+  /**
+   * Create a new collection
+   */
+  @Router.post("/collection/new/:name")
+  async createCollection(session: WebSessionDoc, name: string) {
+    const user = WebSession.getUser(session);
+    return await Collection.create(user, name);
+  }
+
+  /**
+   * Adds a pin to a collection
+   */
+  @Router.patch("/collection/:name/pins/:pinid")
+  async addPinToCollection(session: WebSessionDoc, name: string, pinid: ObjectId) {
+    const user = WebSession.getUser(session);
+    const collection = (await Collection.getCollectionByName(name, user)).collection;
+    console.log(collection.users);
+    await Pin.getPinById(pinid); // throw error if pin does not exist
+    return await Collection.addPin(collection._id, user, pinid);
+  }
+
+  /**
+   * Gives a new user access to a collection
+   */
+  @Router.patch("/collection/:name/users/:username")
+  async giveAccessToCollection(session: WebSessionDoc, name: string, username: string) {
+    const user = WebSession.getUser(session);
+    const newUser = await User.getUserByUsername(username);
+
+    const collection = (await Collection.getCollectionByName(name, user)).collection;
+    return await Collection.addUser(collection._id, user, newUser._id);
   }
 }
 

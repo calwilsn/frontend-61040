@@ -1,4 +1,8 @@
 /* Add some global styles here! */
+html * {
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+  color-scheme: normal;
+}
 
 :root {
   --red: rgb(208, 67, 12);
