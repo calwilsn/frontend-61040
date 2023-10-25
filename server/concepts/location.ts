@@ -21,7 +21,7 @@ export default class LocationConcept {
     if (prevLocation !== null) {
       return { msg: "Location already exists!", location: prevLocation };
     }
-    
+
     // create new location
     const _id = await this.locations.createOne({ x, y, name });
     const location = await this.locations.readOne({ _id });
@@ -64,7 +64,7 @@ export default class LocationConcept {
     if (location === null) {
       throw new LocationNotFoundError(_id);
     } else {
-      return { msg: "Coordinates found successfully", x: location.x, y: location.y};
+      return { msg: "Coordinates found successfully", x: location.x, y: location.y };
     }
   }
 
@@ -81,7 +81,7 @@ export default class LocationConcept {
    */
   async getLocationByCoordinates(x: number, y: number) {
     // only one location can exist at each unique pair of coordinates
-    const location = await this.locations.readOne({x: x, y: y});
+    const location = await this.locations.readOne({ x: x, y: y });
     return location;
   }
 
@@ -89,22 +89,18 @@ export default class LocationConcept {
    * Finds location at given coordinates, if it exists
    */
   async getLocationsByName(name: string) {
-    const locations = await this.locations.readMany({name: name});
+    const locations = await this.locations.readMany({ name: name });
     return locations;
   }
 }
 
 export class LocationNotFoundError extends NotFoundError {
-  constructor(
-    public readonly _id: ObjectId
-  ) {
+  constructor(public readonly _id: ObjectId) {
     super("Location {0} does not exist", _id);
   }
 }
 export class NameDoesNotExistError extends DoesNotExistError {
-  constructor(
-    public readonly _id: ObjectId
-  ) {
+  constructor(public readonly _id: ObjectId) {
     super("Location {0} does not have a name", _id);
   }
 }

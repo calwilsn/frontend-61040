@@ -110,6 +110,34 @@ class Routes {
   }
 
   /**
+   * Creates new map
+   */
+  @Router.get("/map/:mapid/pins")
+  async getPins(mapid: ObjectId) {
+    return await Map.getPins(mapid);
+  }
+
+  /**
+   * Creates new map
+   */
+  @Router.get("/map/:mapid/pins/locations")
+  async getPinLocations(mapid: ObjectId) {
+    const pins = (await Map.getPins(mapid)).pins;
+    const pinLocationIds: Array<ObjectId> = Array<ObjectId>();
+    for (let i = 0; i < pins.length; ++i) {
+      pinLocationIds.push((await Pin.getLocation(pins[i])).location);
+    }
+    const pinLocations: Array<[number, number]> = Array<[number, number]>();
+
+    for (let i = 0; i < pinLocationIds.length; ++i) {
+      const location = await Location.getCoordinates(pinLocationIds[i]);
+      pinLocations.push([location.x, location.y]);
+    }
+
+    return pinLocations;
+  }
+
+  /**
    * Select or deselect coordinates on the map and create a new location there if
    * it does not already exist
    */
@@ -122,7 +150,7 @@ class Routes {
   /**
    * Create new pin at current location and add to map
    */
-  @Router.patch("/map/pin/:mapid")
+  @Router.patch("/map/:mapid/pin")
   async dropPin(session: WebSessionDoc, mapid: ObjectId) {
     const user = WebSession.getUser(session);
     const currLocation = (await Map.getCurrLocation(mapid)).currLocation;

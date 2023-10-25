@@ -1,7 +1,45 @@
 /* Add some global styles here! */
+
 html * {
   font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
   color-scheme: normal;
+}
+
+.link_text {
+  color: orange;
+  text-decoration: none;
+}
+
+.pure-button.pure-button-primary {
+  background-color: orange;
+  border-color: orange;
+}
+
+.pure-button.pure-button-primary:hover {
+  background-color: darkorange;
+  border-color: darkorange;
+}
+
+.centered-link {
+  display: flex;
+  justify-content: center;
+}
+
+.centered-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pure-control-group, .pure-controls {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.pure-control-group input {
+  text-align: center;
+  margin: 3px;
 }
 
 :root {

@@ -14,11 +14,11 @@ export default class PinConcept {
    * Creates a new pin at the given location
    */
   async dropPin(user?: ObjectId, location?: ObjectId) {
-    const oldPin = await this.pins.readOne({ location })
+    const oldPin = await this.pins.readOne({ location });
     if (oldPin !== null) {
-      return {msg: "Pin already exists at this location", pin: oldPin};
+      return { msg: "Pin already exists at this location", pin: oldPin };
     }
-    
+
     const _id = await this.pins.createOne({ location, user });
     const pin = await this.pins.readOne({ _id });
     if (pin === null) {
@@ -50,13 +50,13 @@ export default class PinConcept {
    * or if the pin does not have a location
    */
   async getLocation(_id: ObjectId) {
-      const pin = await this.pins.readOne({ _id });
-      if (pin === null) {
-        throw new PinNotFoundError(_id);
-      } else if (pin.location === undefined) {
-        throw new LocationDoesNotExistdError(_id);
-      }
-      return { msg: "Location found successfully", location: pin.location };
+    const pin = await this.pins.readOne({ _id });
+    if (pin === null) {
+      throw new PinNotFoundError(_id);
+    } else if (pin.location === undefined) {
+      throw new LocationDoesNotExistdError(_id);
+    }
+    return { msg: "Location found successfully", location: pin.location };
   }
 
   /**
@@ -72,16 +72,12 @@ export default class PinConcept {
 }
 
 export class PinNotFoundError extends NotFoundError {
-  constructor(
-    public readonly _id: ObjectId
-  ) {
+  constructor(public readonly _id: ObjectId) {
     super("Pin {0} does not exist", _id);
   }
 }
 export class LocationDoesNotExistdError extends DoesNotExistError {
-  constructor(
-    public readonly _id: ObjectId
-  ) {
+  constructor(public readonly _id: ObjectId) {
     super("Pin {0} does not have a location", _id);
   }
 }

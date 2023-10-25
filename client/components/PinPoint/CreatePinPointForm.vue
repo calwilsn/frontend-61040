@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { fetchy } from "../../utils/fetchy";
+import router from "@/router";
 
 const pin = ref("");
 const image = ref("");
@@ -21,6 +22,7 @@ const createPinPoint = async (pin: string, image: string, caption?: string) => {
   }
   emit("refreshPinPoints");
   emptyForm();
+  void router.push({ name: "Profile" });
 };
 
 const emptyForm = () => {
@@ -33,23 +35,32 @@ const emptyForm = () => {
 <template>
   <form @submit.prevent="createPinPoint(pin, image, caption)">
     <label for="pin">Location:</label>
-    <textarea id="pin" v-model="pin" placeholder="Enter a location" required> </textarea>
+    <textarea id="pin" name="pin" v-model="pin" placeholder="Enter a location" required> </textarea>
     <label for="image">Image:</label>
     <textarea id="image" v-model="image" placeholder="Enter a link to an image" required> </textarea>
     <label for="caption">Caption:</label>
-    <textarea id="caption" v-model="caption" placeholder="Enter a caption (optional)" not required> </textarea>
+    <textarea id="caption" v-model="caption" placeholder="Enter a caption" required> </textarea>
     <button type="submit" class="pure-button-primary pure-button">Create PinPoint</button>
   </form>
 </template>
 
 <style scoped>
 form {
-  background-color: var(--base-bg);
   border-radius: 1em;
   display: flex;
   flex-direction: column;
   gap: 0.5em;
-  padding: 1em;
+  padding: 0.5em;
+  width: 60%;
+  margin: 0 auto;
+}
+
+label {
+  font-size: large;
+}
+
+textarea {
+  background-color: var(--base-bg);
 }
 
 button {
@@ -61,7 +72,10 @@ textarea {
   font-size: inherit;
   height: 6em;
   padding: 0.5em;
+  margin-bottom: 0em;
   border-radius: 4px;
   resize: none;
+  height: 4em; /* reduced from 6em */
+  padding: 0.25em; /* reduced from 0.5em */
 }
 </style>

@@ -3,20 +3,29 @@ import { useToastStore } from "@/stores/toast";
 import { useUserStore } from "@/stores/user";
 import { storeToRefs } from "pinia";
 import { computed, onBeforeMount } from "vue";
-import { RouterLink, RouterView, useRoute } from "vue-router";
+import { RouterLink, RouterView, useRoute, useRouter } from "vue-router";
 
 const currentRoute = useRoute();
+const router = useRouter();
 const currentRouteName = computed(() => currentRoute.name);
 const userStore = useUserStore();
+// const pinsStore = usePinsStore();
 const { isLoggedIn } = storeToRefs(userStore);
 const { toast } = storeToRefs(useToastStore());
+
+// const mapid: ObjectId = new ObjectId("65281c0b73267650738106bd");
 
 // Make sure to update the session before mounting the app in case the user is already logged in
 onBeforeMount(async () => {
   try {
+    // await pinsStore.updatePins(mapid);
     await userStore.updateSession();
+    if (!isLoggedIn.value) {
+      void router.push({ name: "Login" });
+    }
   } catch {
     // User is not logged in
+    void router.push({ name: "Login" });
   }
 });
 </script>
@@ -57,12 +66,12 @@ onBeforeMount(async () => {
 
 nav {
   padding: 1em 2em;
-  background-color: lightgray;
   display: flex;
   align-items: center;
 }
 
 h1 {
+  color: rgb(200, 0, 0);
   font-size: 2em;
   margin: 0;
 }

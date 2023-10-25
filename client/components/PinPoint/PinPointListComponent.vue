@@ -8,8 +8,6 @@ import EditPinPointForm from "./EditPinPointForm.vue";
 import PinPointComponent from "./PinPointComponent.vue";
 import SearchPinPointForm from "./SearchPinPointForm.vue";
 
-const { isLoggedIn } = storeToRefs(useUserStore());
-
 const loaded = ref(false);
 let pinpoints = ref<Array<Record<string, string>>>([]);
 let editing = ref("");
@@ -38,10 +36,6 @@ onBeforeMount(async () => {
 </script>
 
 <template>
-  <section v-if="isLoggedIn">
-    <h2>Create a pinpoint:</h2>
-    <CreatePinPointForm @refreshPinPointss="getPinPoints" />
-  </section>
   <div class="row">
     <h2 v-if="!searchAuthor">PinPoints:</h2>
     <h2 v-else>PinPoints by {{ searchAuthor }}:</h2>

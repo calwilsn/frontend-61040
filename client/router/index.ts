@@ -4,6 +4,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import { useUserStore } from "@/stores/user";
 import HomeView from "../views/HomeView.vue";
 import LoginView from "../views/LoginView.vue";
+import NewPinPointView from "../views/NewPinPointView.vue";
 import NotFoundView from "../views/NotFoundView.vue";
 import ProfileView from "../views/ProfileView.vue";
 import SettingView from "../views/SettingView.vue";
@@ -38,6 +39,12 @@ const router = createRouter({
       path: "/profile",
       name: "Profile",
       component: ProfileView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/newPinPoint",
+      name: "New PinPoint",
+      component: NewPinPointView,
       meta: { requiresAuth: true },
     },
     {

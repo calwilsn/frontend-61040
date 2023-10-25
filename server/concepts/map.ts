@@ -24,7 +24,7 @@ export default class MapConcept {
     if (currPins !== undefined) {
       pins = currPins;
     }
-    
+
     const _id = await this.maps.createOne({ locations, pins, currLocation });
 
     const finalMap = await this.maps.readOne({ _id });
@@ -95,7 +95,7 @@ export default class MapConcept {
       if (finalMap === null) {
         throw new MapNotFoundError(_id);
       }
-      
+
       return { msg: "Location selected successfully", map: finalMap };
     } else {
       return await this.deselectLocation(_id);
@@ -108,11 +108,11 @@ export default class MapConcept {
    */
   async deselectLocation(_id: ObjectId) {
     const map = await this.maps.readOne({ _id });
-    if (map=== null) {
+    if (map === null) {
       throw new MapNotFoundError(_id);
     } else if (map.currLocation !== undefined && map.currLocation !== null) {
-      this.maps.updateOne({ _id }, {currLocation: undefined});
-      
+      this.maps.updateOne({ _id }, { currLocation: undefined });
+
       const finalMap = await this.maps.readOne({ _id });
       if (finalMap === null) {
         throw new MapNotFoundError(_id);
@@ -133,10 +133,10 @@ export default class MapConcept {
       throw new MapNotFoundError(_id);
     }
 
-    let pins = map.pins;
+    const pins = map.pins;
 
     if (pins.includes(pin)) {
-      return { msg: "Pin already exists on map", map };
+      return { msg: "Pin already exists on map", pin: pin };
     }
 
     pins.push(pin);
@@ -149,7 +149,7 @@ export default class MapConcept {
 
     await this.deselectLocation(_id);
 
-    return { msg: "Pin successfully added", map: finalMap };
+    return { msg: "Pin successfully added", pin: pin };
   }
 
   /**
@@ -161,19 +161,19 @@ export default class MapConcept {
       throw new MapNotFoundError(_id);
     }
 
-    let pins = map.pins;
+    const pins = map.pins;
     if (!pins.includes(pin)) {
-      return { msg: "Map does not contain pin", map };
+      return { msg: "Map does not contain pin", pin: pin };
     }
 
     pins.splice(pins.indexOf(pin), 1);
-    await this.maps.updateOne({ _id }, { pins: pins })
+    await this.maps.updateOne({ _id }, { pins: pins });
 
     const finalMap = await this.maps.readOne({ _id });
     if (finalMap === null) {
       throw new MapNotFoundError(_id);
     }
-    return { msg: "Pin successfully removed", map: finalMap };
+    return { msg: "Pin successfully removed", pin: pin };
   }
 
   /**
@@ -184,17 +184,14 @@ export default class MapConcept {
     const map = await this.maps.readOne({ _id });
     if (map === null) {
       throw new MapNotFoundError(_id);
-    } 
+    }
 
     return { msg: "Map found successfully", map: map };
   }
-
 }
 
 export class MapNotFoundError extends NotFoundError {
-  constructor(
-    public readonly _id: ObjectId
-  ) {
+  constructor(public readonly _id: ObjectId) {
     super("Map {0} does not exist", _id);
   }
 }
