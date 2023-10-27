@@ -1,10 +1,17 @@
 <script setup lang="ts">
-import PinPointListComponent from "@/components/PinPoint/PinPointListComponent.vue";
 import { useUserStore } from "@/stores/user";
 import { storeToRefs } from "pinia";
 import MapComponent from "../components/Map/MapComponent.vue";
+import { fetchy } from "../utils/fetchy";
 
 const { currentUsername, isLoggedIn } = storeToRefs(useUserStore());
+const getUserId = async () => {
+  try {
+    await fetchy(`/api/users/${currentUsername}`, "GET");
+  } catch {
+    return;
+  }
+};
 </script>
 
 <template>
@@ -13,15 +20,7 @@ const { currentUsername, isLoggedIn } = storeToRefs(useUserStore());
       <h1 v-if="isLoggedIn">Profile</h1>
       <h1 v-else>Please login!</h1>
     </section>
-    <MapComponent />
-    <form class="pure-form centered-form" @submit.prevent="login">
-      <fieldset>
-        <div class="centered-link">
-          <RouterLink :to="{ name: 'New PinPoint' }" :class="{ link_text: true }"> Create a new PinPoint </RouterLink>
-        </div>
-      </fieldset>
-    </form>
-    <PinPointListComponent />
+    <MapComponent :userid="getUserId" />
   </main>
 </template>
 

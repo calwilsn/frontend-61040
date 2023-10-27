@@ -1,41 +1,41 @@
 <script setup lang="ts">
+import router from "@/router";
 import { ref } from "vue";
 import { fetchy } from "../../utils/fetchy";
-import router from "@/router";
 
-const pin = ref("");
+const props = defineProps({
+  pinid: String,
+});
+
 const image = ref("");
 const caption = ref("");
 const emit = defineEmits(["refreshPinPoints"]);
 
-const createPinPoint = async (pin: string, image: string, caption?: string) => {
-  console.log("pin", pin);
+const createPinPoint = async (image: string, caption?: string) => {
+  console.log("making pinpoint");
+  console.log("pin", props.pinid);
   console.log("image", image);
   console.log("caption", caption);
   try {
-    await fetchy(`/api/pinpoints/${pin}/${image}/${caption}`, "POST", {
-      body: {},
+    await fetchy(`/api/pinpoints/${props.pinid}/${caption}`, "POST", {
+      body: { image },
     });
   } catch (_) {
     console.log("error occurred");
     return;
   }
-  emit("refreshPinPoints");
   emptyForm();
-  void router.push({ name: "Profile" });
+  void router.push({ name: "Home" });
 };
 
 const emptyForm = () => {
-  pin.value = "";
   image.value = "";
   caption.value = "";
 };
 </script>
 
 <template>
-  <form @submit.prevent="createPinPoint(pin, image, caption)">
-    <label for="pin">Location:</label>
-    <textarea id="pin" name="pin" v-model="pin" placeholder="Enter a location" required> </textarea>
+  <form @submit.prevent="createPinPoint(image, caption)">
     <label for="image">Image:</label>
     <textarea id="image" v-model="image" placeholder="Enter a link to an image" required> </textarea>
     <label for="caption">Caption:</label>

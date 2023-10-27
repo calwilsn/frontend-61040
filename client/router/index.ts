@@ -42,7 +42,7 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     {
-      path: "/newPinPoint",
+      path: "/new-pinPoint/:pinid",
       name: "New PinPoint",
       component: NewPinPointView,
       meta: { requiresAuth: true },

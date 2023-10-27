@@ -1,54 +1,28 @@
 <script setup lang="ts">
-import { storeToRefs } from "pinia";
-import { onBeforeMount, ref } from "vue";
-import { useUserStore } from "../../stores/user";
-import { fetchy } from "../../utils/fetchy";
-import CreatePinPointForm from "./CreatePinPointForm.vue";
-import EditPinPointForm from "./EditPinPointForm.vue";
-import PinPointComponent from "./PinPointComponent.vue";
-import SearchPinPointForm from "./SearchPinPointForm.vue";
+import { defineProps } from "vue";
+import { PinpointDoc } from "../../../server/concepts/pinpoint";
 
-const loaded = ref(false);
-let pinpoints = ref<Array<Record<string, string>>>([]);
-let editing = ref("");
-let searchAuthor = ref("");
-
-async function getPinPoints(author?: string) {
-  let query: Record<string, string> = author !== undefined ? { author } : {};
-  let pinpointResults;
-  try {
-    pinpointResults = await fetchy("/api/pinpoints", "GET", { query });
-  } catch (_) {
-    return;
-  }
-  searchAuthor.value = author ? author : "";
-  pinpoints.value = pinpointResults;
-}
-
-function updateEditing(id: string) {
-  editing.value = id;
-}
-
-onBeforeMount(async () => {
-  await getPinPoints();
-  loaded.value = true;
+const props = defineProps({
+  pinid: String,
+  pinpoints: Array<PinpointDoc>,
 });
 </script>
 
 <template>
-  <div class="row">
-    <h2 v-if="!searchAuthor">PinPoints:</h2>
-    <h2 v-else>PinPoints by {{ searchAuthor }}:</h2>
-    <SearchPinPointForm @getPinPointsByAuthor="getPinPoints" />
-  </div>
-  <section class="pinpoints" v-if="loaded && pinpoints.length !== 0">
-    <article v-for="pinpoint in pinpoints" :key="pinpoint._id">
-      <PinPointComponent v-if="editing !== pinpoint._id" :pinpoint="pinpoint" @refreshPinPoints="getPinPoints" @editPinPoint="updateEditing" />
-      <EditPinPointForm v-else :pinpoint="pinpoint" @refreshPinPoints="getPinPoints" @editPinPoint="updateEditing" />
+  <fieldset>
+    <div class="centered-link">
+      <RouterLink :to="{ name: 'New PinPoint', params: { pinid: props.pinid } }" :class="{ link_text: true }"> Create a new PinPoint at this location </RouterLink>
+    </div>
+  </fieldset>
+  <section class="pinpoints" v-if="props.pinpoints !== undefined && props.pinpoints.length !== 0">
+    <article v-for="pinpoint in props.pinpoints" :key="pinpoint._id.toString()">
+      <div>
+        <img :src="pinpoint.media" alt="PinPoint Image" />
+        <p>{{ pinpoint.caption }}</p>
+      </div>
     </article>
   </section>
-  <p v-else-if="loaded">No pinpoints found</p>
-  <p v-else>Loading...</p>
+  <p v-else>No pinpoints found</p>
 </template>
 
 <style scoped>

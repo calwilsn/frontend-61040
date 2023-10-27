@@ -3,7 +3,6 @@ import { Filter, ObjectId } from "mongodb";
 import { Router, getExpressRouter } from "./framework/router";
 
 import { Collection, Location, Map, Pin, PinPoint, Post, User, WebSession } from "./app";
-import { PinPointDoc } from "./concepts/pinpoint";
 import { PostAuthorNotMatchError, PostDoc } from "./concepts/post";
 import { UserDoc } from "./concepts/user";
 import { WebSessionDoc } from "./concepts/websession";
@@ -164,16 +163,19 @@ class Routes {
   /**
    * Remove pin from map
    */
-  @Router.delete("/map/pin/:mapid/:pinid")
+  @Router.delete("/map/:mapid/pins/:pinid")
   async removePin(session: WebSessionDoc, mapid: ObjectId, pinid: ObjectId) {
     const user = WebSession.getUser(session);
-    await Map.removePin(mapid, pinid);
-    return await Pin.sanitizePin(pinid, user);
+    await Pin.sanitizePin(pinid, user);
+    return await Map.removePin(mapid, pinid);
   }
 
-  @Router.get("/pinpoints")
-  async getPinPoints(query: Filter<PinPointDoc>) {
-    return await PinPoint.read(query);
+  /**
+   * Find all pinpoints associated with a location
+   */
+  @Router.get("/pin/:pin/pinpoints")
+  async getPinPoints(pin: ObjectId) {
+    return await PinPoint.read({ pin });
   }
 
   /**
@@ -188,7 +190,7 @@ class Routes {
   /**
    * Creates a new PinPoint with given content and caption
    */
-  @Router.post("/pinpoints/:pin/:image/:caption")
+  @Router.post("/pinpoints/:pin/:caption")
   async createPinPoint(session: WebSessionDoc, pin: ObjectId, image: string, caption?: string) {
     console.log("pin", pin);
     console.log("image", image);

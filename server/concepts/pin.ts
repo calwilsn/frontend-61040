@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 import DocCollection, { BaseDoc } from "../framework/doc";
-import { BadValuesError, DoesNotExistError, NotFoundError } from "./errors";
+import { BadValuesError, DoesNotExistError, NotAllowedError, NotFoundError } from "./errors";
 
 export interface PinDoc extends BaseDoc {
   location?: ObjectId;
@@ -42,7 +42,7 @@ export default class PinConcept {
       return { msg: "Pin deleted successfully" };
     }
 
-    return { msg: "User does not have access to pin" };
+    throw new NotAllowedError("User cannot remove pin");
   }
 
   /**
