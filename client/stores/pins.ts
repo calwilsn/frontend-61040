@@ -1,4 +1,4 @@
-import L from "leaflet";
+import { LeafletMouseEvent } from "leaflet";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { PinpointDoc } from "../../server/concepts/pinpoint";
@@ -49,7 +49,7 @@ export const usePinsStore = defineStore(
       }
     };
 
-    const selectLocation = async (event: L.MouseEvent) => {
+    const selectLocation = async (event: LeafletMouseEvent) => {
       await fetchy(`/api/map/${mapid.value}/${event.latlng.lat}/${event.latlng.lng}`, "PATCH", {
         body: {},
       });

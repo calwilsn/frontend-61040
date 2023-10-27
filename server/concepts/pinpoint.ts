@@ -12,7 +12,7 @@ export interface PinpointDoc extends BaseDoc {
 export default class PinPointConcept {
   public readonly pinpoints = new DocCollection<PinpointDoc>("pinpoints");
 
-  async makePost(pin: ObjectId, media: string, caption?: string, user?: string) {
+  async makePost(pin: ObjectId, media: string, caption?: string, user?: ObjectId) {
     const _id = await this.pinpoints.createOne({ pin, media, caption, user });
     const pinpoint = await this.pinpoints.readOne({ _id });
     if (pinpoint === null) {
