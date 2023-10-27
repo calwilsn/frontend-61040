@@ -1,4 +1,4 @@
-import { L } from "@vue-leaflet/vue-leaflet";
+import L from "leaflet";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { PinpointDoc } from "../../server/concepts/pinpoint";

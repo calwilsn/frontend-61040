@@ -6,10 +6,6 @@ import pinImage from "../../assets/images/pin.png";
 import { usePinsStore } from "../../stores/pins";
 import PinPointListComponent from "../PinPoint/PinPointListComponent.vue";
 
-const props = defineProps({
-  userId: String,
-});
-
 const pinsStore = usePinsStore();
 
 const pinIcon = L.icon({
@@ -32,7 +28,7 @@ const centerLong = ref(-71.092003);
     </l-map>
 
     <div v-if="pinsStore.showPinpoints">
-      <PinPointListComponent :pinid="pinsStore.selectedPinId" :pinpoints="pinsStore.pinpoints" />
+      <PinPointListComponent :pinpoints="pinsStore.pinpoints" />
     </div>
 
     <div v-if="pinsStore.showConfirmationBar" class="confirmation-bar">
