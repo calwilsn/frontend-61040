@@ -28,7 +28,7 @@ const centerLong = ref(-71.092003);
     </l-map>
 
     <div v-if="pinsStore.showPinpoints">
-      <PinPointListComponent :pinpoints="pinsStore.pinpoints" />
+      <PinPointListComponent :pinid="pinsStore.selectedPinId" :pinpoints="pinsStore.pinpoints" />
     </div>
 
     <div v-if="pinsStore.showConfirmationBar" class="confirmation-bar">
